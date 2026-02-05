@@ -57,6 +57,32 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        environmental: {
+          DEFAULT: "hsl(var(--environmental))",
+          foreground: "hsl(var(--environmental-foreground))",
+        },
+        social: {
+          DEFAULT: "hsl(var(--social))",
+          foreground: "hsl(var(--social-foreground))",
+        },
+        governance: {
+          DEFAULT: "hsl(var(--governance))",
+          foreground: "hsl(var(--governance-foreground))",
+        },
+        score: {
+          excellent: "hsl(var(--score-excellent))",
+          good: "hsl(var(--score-good))",
+          average: "hsl(var(--score-average))",
+          poor: "hsl(var(--score-poor))",
+          critical: "hsl(var(--score-critical))",
+        },
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

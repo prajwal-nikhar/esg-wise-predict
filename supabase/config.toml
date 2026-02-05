@@ -1,0 +1,9 @@
+project_id = "pfpywesfljervuhvwzos"
+
+[functions.predict-answers]
+enabled = true
+verify_jwt = false
+
+[functions.forecast-score]
+enabled = true
+verify_jwt = false
