@@ -1,6 +1,6 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useParams } from 'react-router-dom';
-import { useCompanyById } from '@/hooks/useCompanies';
+import { useCompanyById } from '@/hooks/useCompanyById';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,9 +9,9 @@ import { PILLAR_LABELS, INDUSTRY_LABELS, COMPANY_SIZE_LABELS } from '@/lib/types
 
 export default function CompanyDetails() {
   const { companyId } = useParams<{ companyId: string }>();
-  const { companyData: company, loading, error } = useCompanyById(companyId);
+  const { data, isLoading, isError, error } = useCompanyById(companyId);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-12">
@@ -21,17 +21,18 @@ export default function CompanyDetails() {
     );
   }
 
-  if (error || !company) {
+  if (isError || !data?.company) {
     return (
       <DashboardLayout>
         <div className="text-center py-12">
-          <p className="text-lg text-destructive">{error || 'Company not found'}</p>
+          <p className="text-lg text-destructive">{error?.message || 'Company not found'}</p>
         </div>
       </DashboardLayout>
     );
   }
 
-  const latestScore = company.latest_score;
+  const { company, scores } = data;
+  const latestScore = scores?.[0];
 
   return (
     <DashboardLayout>
@@ -52,7 +53,7 @@ export default function CompanyDetails() {
           )}
         </div>
 
-        <p className="text-lg text-muted-foreground">{company.description}</p>
+        {company.description && <p className="text-lg text-muted-foreground">{company.description}</p>}
 
         <Card>
           <CardHeader>
