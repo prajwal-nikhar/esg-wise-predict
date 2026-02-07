@@ -141,3 +141,24 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes esg-scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  display: flex;
+  width: max-content;
+  animation: esg-scroll-left 140s linear infinite;
+}
+
+/* Optional: pause animation on hover */
+.animate-scroll:hover {
+  animation-play-state: paused;
+}

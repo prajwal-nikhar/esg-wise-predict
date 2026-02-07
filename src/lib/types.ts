@@ -112,3 +112,16 @@
    social: 'Social',
    governance: 'Governance',
  };
+
+ export const PILLAR_COLORS: Record<ESGPillar, string> = {
+  environmental: '#22c55e',
+  social: '#3b82f6',
+  governance: '#8b5cf6',
+};
+
+export interface ESGNews {
+  title: string;
+  link: string;
+  source: string;
+  published_date: Date | null;
+}

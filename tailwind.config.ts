@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      backgroundImage: {
+        'esg-light': "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('https://images.pexels.com/photos/433308/pexels-photo-433308.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
+        'esg-dark': "linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('https://images.pexels.com/photos/433308/pexels-photo-433308.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

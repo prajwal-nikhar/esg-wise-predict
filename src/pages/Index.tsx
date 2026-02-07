@@ -5,9 +5,9 @@ import { Leaf, Building2, TrendingUp, BarChart3, Users, Shield, ArrowRight } fro
 
 export default function Index() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-esg-light dark:bg-esg-dark bg-cover bg-center">
       {/* Header */}
-      <header className="border-b bg-card">
+      <header className="sticky top-0 z-40 w-full border-b bg-card/80 backdrop-blur-sm">
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-primary" />
@@ -27,7 +27,7 @@ export default function Index() {
       {/* Hero */}
       <section className="py-20 px-4">
         <div className="container max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent text-accent-foreground text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/80 text-accent-foreground text-sm mb-6">
             <Leaf className="h-4 w-4" />
             ESG Scoring & Prediction Platform
           </div>
@@ -54,11 +54,11 @@ export default function Index() {
       </section>
 
       {/* Features */}
-      <section className="py-16 px-4 bg-muted/50">
+      <section className="py-16 px-4">
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-12">Platform Features</h2>
           <div className="grid md:grid-cols-3 gap-6">
-            <Card>
+            <Card className="bg-card/60 backdrop-blur-sm">
               <CardHeader>
                 <div className="p-2 rounded-lg bg-environmental/10 w-fit mb-2">
                   <BarChart3 className="h-6 w-6 text-environmental" />
@@ -69,7 +69,7 @@ export default function Index() {
                 </CardDescription>
               </CardHeader>
             </Card>
-            <Card>
+            <Card className="bg-card/60 backdrop-blur-sm">
               <CardHeader>
                 <div className="p-2 rounded-lg bg-social/10 w-fit mb-2">
                   <TrendingUp className="h-6 w-6 text-social" />
@@ -80,7 +80,7 @@ export default function Index() {
                 </CardDescription>
               </CardHeader>
             </Card>
-            <Card>
+            <Card className="bg-card/60 backdrop-blur-sm">
               <CardHeader>
                 <div className="p-2 rounded-lg bg-governance/10 w-fit mb-2">
                   <Users className="h-6 w-6 text-governance" />
@@ -100,7 +100,7 @@ export default function Index() {
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-12">Built for Everyone</h2>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="border-2 hover:border-primary transition-colors">
+            <Card className="border-2 hover:border-primary transition-colors bg-card/60 backdrop-blur-sm">
               <CardHeader>
                 <Building2 className="h-12 w-12 text-primary mb-4" />
                 <CardTitle className="text-2xl">For Companies</CardTitle>
@@ -117,7 +117,7 @@ export default function Index() {
                 </ul>
               </CardContent>
             </Card>
-            <Card className="border-2 hover:border-primary transition-colors">
+            <Card className="border-2 hover:border-primary transition-colors bg-card/60 backdrop-blur-sm">
               <CardHeader>
                 <TrendingUp className="h-12 w-12 text-primary mb-4" />
                 <CardTitle className="text-2xl">For Investors</CardTitle>
@@ -139,7 +139,7 @@ export default function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8 px-4">
+      <footer className="border-t py-8 px-4 bg-background/50">
         <div className="container flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Leaf className="h-4 w-4 text-primary" />

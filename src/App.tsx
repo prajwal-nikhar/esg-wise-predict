@@ -23,6 +23,7 @@ import InvestorDashboard from "./pages/investor/InvestorDashboard";
 import BrowseCompanies from "./pages/investor/BrowseCompanies";
 import CompareCompanies from "./pages/investor/CompareCompanies";
 import Watchlist from "./pages/investor/Watchlist";
+import CompanyDetails from "./pages/investor/CompanyDetails";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,11 @@ const App = () => (
             <Route path="/investor/watchlist" element={
               <ProtectedRoute allowedRoles={['investor']}>
                 <Watchlist />
+              </ProtectedRoute>
+            } />
+            <Route path="/investor/company/:companyId" element={
+              <ProtectedRoute allowedRoles={['investor']}>
+                <CompanyDetails />
               </ProtectedRoute>
             } />
             

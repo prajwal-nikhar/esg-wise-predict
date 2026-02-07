@@ -25,6 +25,7 @@
    X,
  } from 'lucide-react';
  import { cn } from '@/lib/utils';
+import EsgNewsSlider from '@/components/esg/EsgNewsSlider';
  
  interface DashboardLayoutProps {
    children: ReactNode;
@@ -64,9 +65,9 @@
      .toUpperCase() || 'U';
  
    return (
-     <div className="min-h-screen bg-background">
+     <div className="min-h-screen bg-esg-light dark:bg-esg-dark bg-cover bg-center">
        {/* Header */}
-       <header className="sticky top-0 z-50 w-full border-b bg-card">
+       <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
          <div className="container flex h-16 items-center justify-between px-4">
            <div className="flex items-center gap-4">
              <Button
@@ -126,7 +127,7 @@
  
          {/* Mobile Navigation */}
          {mobileMenuOpen && (
-           <nav className="md:hidden border-t p-4 space-y-1 bg-card">
+           <nav className="md:hidden border-t p-4 space-y-1 bg-card/80 backdrop-blur-sm">
              {navItems.map((item) => (
                <Link
                  key={item.href}
@@ -148,6 +149,11 @@
  
        {/* Main Content */}
        <main className="container px-4 py-6">{children}</main>
+
+       {/* Footer */}
+       <footer className="border-t bg-background/50">
+        <EsgNewsSlider />
+       </footer>
      </div>
    );
  }
