@@ -1,125 +1,78 @@
 
 
-# ESG Scoring & Prediction Platform
+# Fix: Ambiguous Column Reference in get_questions_for_company Function
 
-## Overview
-A comprehensive ESG (Environmental, Social, Governance) platform where companies self-assess through binary questionnaires and receive scores, while investors can view, analyze, and compare companies. AI/ML models will predict missing answers, forecast future scores, and provide industry benchmarks.
+## Problem
+The `get_questions_for_company` database function is returning a 400 error because PostgreSQL cannot determine which `industry` column is being referenced in the WHERE clause. The function's return table definition includes an `industry` column, which conflicts with the `industry` column in the CTE (Common Table Expression).
 
----
+## Root Cause
+In the current function:
+```sql
+WHERE q.industry = (SELECT industry FROM company_industry);
+```
 
-## Core Features
+PostgreSQL sees `industry` and cannot decide if it refers to:
+- The return table's `industry` column
+- The CTE's `industry` column
 
-### 1. User Authentication & Roles
-- **Company accounts**: Register, complete questionnaires, view their own scores and predictions
-- **Investor/Analyst accounts**: Browse companies, compare scores, access analytics
-- **Secure role-based access** with proper separation of data visibility
+## Solution
+Update the database function to fully qualify the column reference in the CTE subquery by aliasing it properly.
 
-### 2. Company Profiles
-- Company registration with industry classification
-- Basic company info: name, sector, size, location, revenue range
-- Industry categorization for accurate benchmarking (e.g., Tech, Manufacturing, Finance, Healthcare)
+## Changes Required
 
-### 3. ESG Binary Questionnaire System
-Comprehensive question sets aligned with major ESG frameworks:
+### Database Migration
+Create a new migration to replace the function with a fixed version:
 
-**Environmental (E)**
-- Carbon emissions tracking & reduction targets
-- Renewable energy usage
-- Waste management & recycling programs
-- Water conservation measures
-- Environmental compliance certifications
+```sql
+CREATE OR REPLACE FUNCTION public.get_questions_for_company(company_id uuid)
+ RETURNS TABLE(id uuid, pillar esg_pillar, question_text text, category text, order_index integer, industry industry_type, created_at timestamp with time zone, options jsonb)
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  company_industry_value industry_type;
+BEGIN
+  -- First, get the company's industry into a variable
+  SELECT c.industry INTO company_industry_value
+  FROM public.companies c
+  WHERE c.id = get_questions_for_company.company_id;
 
-**Social (S)**
-- Diversity & inclusion policies
-- Employee health & safety programs
-- Community engagement initiatives
-- Fair labor practices
-- Data privacy protection
+  RETURN QUERY
+  SELECT
+    q.id,
+    q.pillar,
+    q.question_text,
+    q.category,
+    q.order_index,
+    q.industry,
+    q.created_at,
+    (
+      SELECT jsonb_agg(jsonb_build_object(
+        'id', o.id,
+        'question_id', o.question_id,
+        'option_text', o.option_text,
+        'score', o.score,
+        'order_index', o.order_index
+      ))
+      FROM public.question_options o
+      WHERE o.question_id = q.id
+    ) AS options
+  FROM
+    public.esg_questions q
+  WHERE
+    q.industry = company_industry_value;
+END;
+$function$;
+```
 
-**Governance (G)**
-- Board diversity & independence
-- Executive compensation transparency
-- Anti-corruption policies
-- Whistleblower protection
-- Risk management processes
+## Technical Details
 
-### 4. Scoring Engine
-- Individual pillar scores (E, S, G) based on binary responses
-- Weighted overall ESG score calculation
-- Industry-adjusted scoring methodology
-- Visual score breakdown with clear indicators
+The fix uses a DECLARE block to store the company's industry in a local variable (`company_industry_value`) before running the main query. This eliminates the ambiguity because:
+- The variable name is distinct from any column names
+- The WHERE clause now clearly references `q.industry = company_industry_value`
 
-### 5. ML-Powered Predictions (using Lovable AI)
-
-**Missing Answer Prediction**
-- Analyze company profile and answered questions
-- Predict likely answers to unanswered questions
-- Show confidence levels for predictions
-- Allow companies to confirm or override predictions
-
-**Future Score Forecasting**
-- Project score trajectories over 1-3 years
-- Factor in industry trends and company profile
-- Show potential improvement pathways
-
-**Industry Benchmarking**
-- Compare company against industry peers
-- Percentile ranking within sector
-- Identify strengths and improvement areas relative to competitors
-
-### 6. Analytics Dashboard
-
-**For Companies:**
-- Current ESG scores with breakdown
-- Historical score trends
-- ML predictions and forecasts
-- Recommendations for improvement
-- Gap analysis showing areas needing attention
-
-**For Investors:**
-- Company search and filtering
-- Side-by-side company comparison
-- Industry-wide ESG analytics
-- Portfolio ESG assessment
-- Watchlist functionality
-
-### 7. Comparison & Reporting
-- Multi-company comparison charts
-- Export reports (PDF-ready format)
-- Score trend visualizations
-- Benchmark comparison graphs
-
----
-
-## Technical Architecture
-
-### Frontend
-- Modern React dashboard with responsive design
-- Interactive charts using Recharts for score visualization
-- Clean, professional UI suitable for enterprise users
-- Mobile-friendly interface
-
-### Backend (Lovable Cloud)
-- **Database**: Companies, questionnaires, responses, scores, predictions
-- **Authentication**: Role-based access (Company vs Investor)
-- **Edge Functions**: Score calculations, ML prediction calls
-- **Lovable AI Integration**: Gemini-powered predictions for benchmarks and forecasts
-
----
-
-## User Experience Flow
-
-**Company Journey:**
-1. Register and create company profile
-2. Complete ESG questionnaire (binary yes/no questions)
-3. View calculated scores with breakdown
-4. See ML predictions for unanswered questions
-5. Review future score forecasts and improvement recommendations
-
-**Investor Journey:**
-1. Sign up as investor/analyst
-2. Browse companies by industry or score range
-3. View detailed company ESG profiles
-4. Compare multiple companies side-by-side
-5. Access predictive analytics and industry benchmarks
+## Expected Outcome
+After applying this fix:
+- The questionnaire page will load correctly for finance and technology companies
+- All 30 finance questions and 32 technology questions will display properly
+- Companies can answer questions and calculate their ESG scores
 
