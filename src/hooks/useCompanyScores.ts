@@ -54,6 +54,8 @@
       const weights = weightsResult.data;
 
       // Calculate pillar scores based on selected options
+      // Each option has score 0-3, so max score per question is 3
+      const MAX_OPTION_SCORE = 3;
       const pillarScores = { environmental: { total: 0, count: 0 }, social: { total: 0, count: 0 }, governance: { total: 0, count: 0 } };
 
       for (const question of questions) {
@@ -68,15 +70,16 @@
         }
       }
 
-      // Calculate average scores per pillar (0-100 scale, assuming options score 0-100)
+      // Calculate percentage scores per pillar (0-100 scale)
+      // Formula: (total points earned / max possible points) * 100
       const envScore = pillarScores.environmental.count > 0
-        ? pillarScores.environmental.total / pillarScores.environmental.count
+        ? (pillarScores.environmental.total / (pillarScores.environmental.count * MAX_OPTION_SCORE)) * 100
         : null;
       const socScore = pillarScores.social.count > 0
-        ? pillarScores.social.total / pillarScores.social.count
+        ? (pillarScores.social.total / (pillarScores.social.count * MAX_OPTION_SCORE)) * 100
         : null;
       const govScore = pillarScores.governance.count > 0
-        ? pillarScores.governance.total / pillarScores.governance.count
+        ? (pillarScores.governance.total / (pillarScores.governance.count * MAX_OPTION_SCORE)) * 100
         : null;
 
       // Calculate weighted overall score using industry weights
