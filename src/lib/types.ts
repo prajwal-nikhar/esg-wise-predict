@@ -35,26 +35,34 @@
    updated_at: string;
  }
  
- export interface ESGQuestion {
-   id: string;
-   pillar: ESGPillar;
-   question_text: string;
-   weight: number;
-   category: string;
-   order_index: number;
-   is_active: boolean;
-   created_at: string;
- }
- 
- export interface QuestionnaireResponse {
-   id: string;
-   company_id: string;
-   question_id: string;
-   answer: boolean | null;
-   is_predicted: boolean;
-   prediction_confidence: number | null;
-   answered_at: string;
- }
+export interface QuestionOption {
+  id: string;
+  question_id: string;
+  option_text: string;
+  score: number;
+  order_index: number;
+}
+
+export interface ESGQuestion {
+  id: string;
+  pillar: ESGPillar;
+  question_text: string;
+  category: string;
+  order_index: number;
+  industry: IndustryType;
+  created_at: string;
+  options?: QuestionOption[];
+}
+
+export interface QuestionnaireResponse {
+  id: string;
+  company_id: string;
+  question_id: string;
+  selected_option_id: string | null;
+  is_predicted: boolean;
+  prediction_confidence: number | null;
+  answered_at: string;
+}
  
  export interface CompanyScore {
    id: string;

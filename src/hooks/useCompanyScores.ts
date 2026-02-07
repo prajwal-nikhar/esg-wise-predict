@@ -24,47 +24,82 @@
    });
  
    const calculateScores = useMutation({
-     mutationFn: async () => {
-       if (!companyId) throw new Error('No company ID');
- 
-       // Fetch responses and questions
-       const [responsesResult, questionsResult] = await Promise.all([
-         supabase.from('questionnaire_responses').select('*').eq('company_id', companyId),
-         supabase.from('esg_questions').select('*').eq('is_active', true),
-       ]);
- 
-       if (responsesResult.error) throw responsesResult.error;
-       if (questionsResult.error) throw questionsResult.error;
- 
-       const responses = responsesResult.data;
-       const questions = questionsResult.data;
- 
-       // Calculate pillar scores
-       const pillarScores = { environmental: { total: 0, max: 0 }, social: { total: 0, max: 0 }, governance: { total: 0, max: 0 } };
- 
-       for (const question of questions) {
-         const response = responses.find((r) => r.question_id === question.id);
-         const weight = Number(question.weight);
-         pillarScores[question.pillar as keyof typeof pillarScores].max += weight * 10;
-         if (response?.answer === true) {
-           pillarScores[question.pillar as keyof typeof pillarScores].total += weight * 10;
-         }
-       }
- 
-       const envScore = pillarScores.environmental.max > 0
-         ? (pillarScores.environmental.total / pillarScores.environmental.max) * 100
-         : null;
-       const socScore = pillarScores.social.max > 0
-         ? (pillarScores.social.total / pillarScores.social.max) * 100
-         : null;
-       const govScore = pillarScores.governance.max > 0
-         ? (pillarScores.governance.total / pillarScores.governance.max) * 100
-         : null;
- 
-       const validScores = [envScore, socScore, govScore].filter((s) => s !== null) as number[];
-       const overallScore = validScores.length > 0
-         ? validScores.reduce((a, b) => a + b, 0) / validScores.length
-         : null;
+    mutationFn: async () => {
+      if (!companyId) throw new Error('No company ID');
+
+      // Fetch company to get industry
+      const { data: company, error: companyError } = await supabase
+        .from('companies')
+        .select('industry')
+        .eq('id', companyId)
+        .single();
+      
+      if (companyError) throw companyError;
+
+      // Fetch responses, questions with options, and pillar weights
+      const [responsesResult, questionsResult, optionsResult, weightsResult] = await Promise.all([
+        supabase.from('questionnaire_responses').select('*').eq('company_id', companyId),
+        supabase.from('esg_questions').select('*').eq('industry', company.industry),
+        supabase.from('question_options').select('*'),
+        supabase.from('pillar_weights').select('*').eq('industry', company.industry).single(),
+      ]);
+
+      if (responsesResult.error) throw responsesResult.error;
+      if (questionsResult.error) throw questionsResult.error;
+      if (optionsResult.error) throw optionsResult.error;
+
+      const responses = responsesResult.data;
+      const questions = questionsResult.data;
+      const options = optionsResult.data;
+      const weights = weightsResult.data;
+
+      // Calculate pillar scores based on selected options
+      const pillarScores = { environmental: { total: 0, count: 0 }, social: { total: 0, count: 0 }, governance: { total: 0, count: 0 } };
+
+      for (const question of questions) {
+        const response = responses.find((r) => r.question_id === question.id);
+        if (response?.selected_option_id) {
+          const selectedOption = options.find((o) => o.id === response.selected_option_id);
+          if (selectedOption) {
+            const pillar = question.pillar as keyof typeof pillarScores;
+            pillarScores[pillar].total += selectedOption.score;
+            pillarScores[pillar].count += 1;
+          }
+        }
+      }
+
+      // Calculate average scores per pillar (0-100 scale, assuming options score 0-100)
+      const envScore = pillarScores.environmental.count > 0
+        ? pillarScores.environmental.total / pillarScores.environmental.count
+        : null;
+      const socScore = pillarScores.social.count > 0
+        ? pillarScores.social.total / pillarScores.social.count
+        : null;
+      const govScore = pillarScores.governance.count > 0
+        ? pillarScores.governance.total / pillarScores.governance.count
+        : null;
+
+      // Calculate weighted overall score using industry weights
+      let overallScore: number | null = null;
+      if (weights && (envScore !== null || socScore !== null || govScore !== null)) {
+        const envWeight = Number(weights.environmental_weight) || 0.33;
+        const socWeight = Number(weights.social_weight) || 0.33;
+        const govWeight = Number(weights.governance_weight) || 0.34;
+        
+        let weightedSum = 0;
+        let totalWeight = 0;
+        
+        if (envScore !== null) { weightedSum += envScore * envWeight; totalWeight += envWeight; }
+        if (socScore !== null) { weightedSum += socScore * socWeight; totalWeight += socWeight; }
+        if (govScore !== null) { weightedSum += govScore * govWeight; totalWeight += govWeight; }
+        
+        overallScore = totalWeight > 0 ? weightedSum / totalWeight : null;
+      } else {
+        const validScores = [envScore, socScore, govScore].filter((s) => s !== null) as number[];
+        overallScore = validScores.length > 0
+          ? validScores.reduce((a, b) => a + b, 0) / validScores.length
+          : null;
+      }
  
        // Insert new score record
        const { data, error } = await supabase

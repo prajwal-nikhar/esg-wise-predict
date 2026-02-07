@@ -22,28 +22,28 @@
      enabled: !!companyId,
    });
  
-   const upsertResponse = useMutation({
-     mutationFn: async ({ questionId, answer }: { questionId: string; answer: boolean }) => {
-       if (!companyId) throw new Error('No company ID');
-       
-       const { data, error } = await supabase
-         .from('questionnaire_responses')
-         .upsert(
-           {
-             company_id: companyId,
-             question_id: questionId,
-             answer,
-             is_predicted: false,
-             answered_at: new Date().toISOString(),
-           },
-           { onConflict: 'company_id,question_id' }
-         )
-         .select()
-         .single();
-       
-       if (error) throw error;
-       return data;
-     },
+  const upsertResponse = useMutation({
+    mutationFn: async ({ questionId, selectedOptionId }: { questionId: string; selectedOptionId: string }) => {
+      if (!companyId) throw new Error('No company ID');
+      
+      const { data, error } = await supabase
+        .from('questionnaire_responses')
+        .upsert(
+          {
+            company_id: companyId,
+            question_id: questionId,
+            selected_option_id: selectedOptionId,
+            is_predicted: false,
+            answered_at: new Date().toISOString(),
+          },
+          { onConflict: 'company_id,question_id' }
+        )
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
      onSuccess: () => {
        queryClient.invalidateQueries({ queryKey: ['questionnaire-responses', companyId] });
      },

@@ -7,8 +7,8 @@ import { useCompany } from '@/hooks/useCompany';
 import { useESGQuestionsByPillar } from '@/hooks/useESGQuestions';
 import { useQuestionnaireResponses } from '@/hooks/useQuestionnaireResponses';
 import { useCompanyScores } from '@/hooks/useCompanyScores';
-import { ESGPillar, PILLAR_LABELS } from '@/lib/types';
-import { Leaf, Users, Building, CheckCircle2, XCircle, Loader2, Calculator } from 'lucide-react';
+import { ESGPillar, PILLAR_LABELS, QuestionOption } from '@/lib/types';
+import { Leaf, Users, Building, CheckCircle2, Loader2, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const pillarIcons = {
@@ -40,8 +40,8 @@ export default function Questionnaire() {
     );
   }
 
-  const handleAnswer = async (questionId: string, answer: boolean) => {
-    await upsertResponse.mutateAsync({ questionId, answer });
+  const handleSelectOption = async (questionId: string, optionId: string) => {
+    await upsertResponse.mutateAsync({ questionId, selectedOptionId: optionId });
   };
 
   const pillars: ESGPillar[] = ['environmental', 'social', 'governance'];
@@ -52,7 +52,7 @@ export default function Questionnaire() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">ESG Questionnaire</h1>
-            <p className="text-muted-foreground">Answer yes/no questions to assess your ESG performance</p>
+            <p className="text-muted-foreground">Answer questions to assess your ESG performance</p>
           </div>
           <Button onClick={() => calculateScores.mutate()} disabled={calculateScores.isPending}>
             {calculateScores.isPending ? (
@@ -69,7 +69,7 @@ export default function Questionnaire() {
             {pillars.map((pillar) => {
               const Icon = pillarIcons[pillar];
               const questions = questionsByPillar?.[pillar] || [];
-              const answered = questions.filter((q) => responsesMap?.[q.id]?.answer !== null).length;
+              const answered = questions.filter((q) => responsesMap?.[q.id]?.selected_option_id).length;
               return (
                 <TabsTrigger
                   key={pillar}
@@ -88,6 +88,8 @@ export default function Questionnaire() {
             <TabsContent key={pillar} value={pillar} className="space-y-4 mt-6">
               {questionsByPillar?.[pillar]?.map((question, index) => {
                 const response = responsesMap?.[question.id];
+                const options = (question.options || []) as QuestionOption[];
+                
                 return (
                   <Card key={question.id}>
                     <CardHeader className="pb-3">
@@ -105,35 +107,42 @@ export default function Questionnaire() {
                         )}
                       </div>
                     </CardHeader>
-                    <CardContent className="flex gap-3">
-                      <Button
-                        variant={response?.answer === true ? 'default' : 'outline'}
-                        size="sm"
-                        className={cn(
-                          response?.answer === true && 'bg-score-excellent hover:bg-score-excellent/90'
-                        )}
-                        onClick={() => handleAnswer(question.id, true)}
-                        disabled={upsertResponse.isPending}
-                      >
-                        <CheckCircle2 className="mr-1 h-4 w-4" />
-                        Yes
-                      </Button>
-                      <Button
-                        variant={response?.answer === false ? 'default' : 'outline'}
-                        size="sm"
-                        className={cn(
-                          response?.answer === false && 'bg-score-critical hover:bg-score-critical/90'
-                        )}
-                        onClick={() => handleAnswer(question.id, false)}
-                        disabled={upsertResponse.isPending}
-                      >
-                        <XCircle className="mr-1 h-4 w-4" />
-                        No
-                      </Button>
+                    <CardContent className="flex flex-wrap gap-2">
+                      {options.length > 0 ? (
+                        options
+                          .sort((a, b) => a.order_index - b.order_index)
+                          .map((option) => (
+                            <Button
+                              key={option.id}
+                              variant={response?.selected_option_id === option.id ? 'default' : 'outline'}
+                              size="sm"
+                              className={cn(
+                                'transition-all',
+                                response?.selected_option_id === option.id && 'bg-primary'
+                              )}
+                              onClick={() => handleSelectOption(question.id, option.id)}
+                              disabled={upsertResponse.isPending}
+                            >
+                              {response?.selected_option_id === option.id && (
+                                <CheckCircle2 className="mr-1 h-4 w-4" />
+                              )}
+                              {option.option_text}
+                            </Button>
+                          ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">No options available</span>
+                      )}
                     </CardContent>
                   </Card>
                 );
               })}
+              {(!questionsByPillar?.[pillar] || questionsByPillar[pillar].length === 0) && (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No questions available for this pillar in your industry.
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           ))}
         </Tabs>

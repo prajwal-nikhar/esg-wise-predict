@@ -35,7 +35,7 @@ export default function CompanyDashboard() {
   }
 
   const totalQuestions = questions?.length || 0;
-  const answeredQuestions = responses?.filter((r) => r.answer !== null).length || 0;
+  const answeredQuestions = responses?.filter((r) => r.selected_option_id !== null).length || 0;
   const completionPercentage = totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
 
   return (

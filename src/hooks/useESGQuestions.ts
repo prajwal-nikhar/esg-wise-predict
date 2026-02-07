@@ -1,20 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ESGQuestion, ESGPillar } from '@/lib/types';
+import { ESGQuestion, ESGPillar, QuestionOption } from '@/lib/types';
 
 // This function now requires a companyId to fetch relevant questions.
-export function useESGQuestions(companyId: string) {
+export function useESGQuestions(companyId: string | undefined) {
   return useQuery({
     queryKey: ['esg-questions', companyId],
     queryFn: async () => {
+      if (!companyId) return [];
       const { data, error } = await supabase.rpc('get_questions_for_company', {
-        p_company_id: companyId,
+        company_id: companyId,
       });
 
       if (error) throw error;
-      return data as ESGQuestion[];
+      
+      // Transform the options from Json to QuestionOption[]
+      return (data || []).map((q: any) => ({
+        ...q,
+        options: (q.options || []) as QuestionOption[],
+      })) as ESGQuestion[];
     },
-    // The query will not run until the companyId is available.
     enabled: !!companyId,
   });
 }

@@ -27,21 +27,21 @@
    recommendations: string[];
  }
  
- export default function Predictions() {
-   const { company } = useCompany();
-   const { latestScore } = useCompanyScores(company?.id);
-   const { data: questions } = useESGQuestions();
-   const { responses } = useQuestionnaireResponses(company?.id);
-   const { toast } = useToast();
- 
-   const [predictions, setPredictions] = useState<Prediction[]>([]);
-   const [forecast, setForecast] = useState<ForecastData | null>(null);
-   const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
-   const [isLoadingForecast, setIsLoadingForecast] = useState(false);
- 
-   const unansweredQuestions = questions?.filter(
-     (q) => !responses?.find((r) => r.question_id === q.id && r.answer !== null)
-   );
+export default function Predictions() {
+  const { company } = useCompany();
+  const { latestScore } = useCompanyScores(company?.id);
+  const { data: questions } = useESGQuestions(company?.id);
+  const { responses } = useQuestionnaireResponses(company?.id);
+  const { toast } = useToast();
+
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [forecast, setForecast] = useState<ForecastData | null>(null);
+  const [isLoadingPredictions, setIsLoadingPredictions] = useState(false);
+  const [isLoadingForecast, setIsLoadingForecast] = useState(false);
+
+  const unansweredQuestions = questions?.filter(
+    (q) => !responses?.find((r) => r.question_id === q.id && r.selected_option_id !== null)
+  );
  
    const handlePredictMissing = async () => {
      if (!company || !unansweredQuestions?.length) return;
