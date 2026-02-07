@@ -1,26 +1,60 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { Company, CompanyScore } from '@/lib/types';
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Company } from '@/lib/types';
-
-export function useCompanyById(companyId: string | undefined) {
-  const { data: company, isLoading, error } = useQuery({
-    queryKey: ['company', companyId],
-    queryFn: async () => {
-      if (!companyId) return null;
-      const { data, error } = await supabase
-        .from('companies')
-        .select('*, latest_score:company_scores(*)')
-        .eq('id', companyId)
-        .order('calculated_at', { foreignTable: 'company_scores', ascending: false })
-        .limit(1, { foreignTable: 'company_scores' })
-        .single();
-      
-      if (error) throw error;
-      return data as Company | null;
-    },
-    enabled: !!companyId,
-  });
-
-  return { company, isLoading, error };
+export interface CompanyDetailsData extends Company {
+  latest_score: CompanyScore | null;
 }
+
+export const useCompanyById = (companyId: string | undefined) => {
+  const [companyData, setCompanyData] = useState<CompanyDetailsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCompanyData = async () => {
+      if (!companyId) {
+        setCompanyData(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('id', companyId)
+          .single();
+
+        if (companyError) throw companyError;
+        if (!company) throw new Error('Company not found.');
+
+        const { data: latestScoreData, error: scoreError } = await supabase
+          .from('company_scores')
+          .select('*')
+          .eq('company_id', companyId)
+          .order('calculated_at', { ascending: false })
+          .limit(1);
+
+        if (scoreError) {
+          console.warn(scoreError);
+        }
+
+        const score = latestScoreData && latestScoreData.length > 0 ? latestScoreData[0] : null;
+
+        setCompanyData({ ...company, latest_score: score });
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanyData();
+  }, [companyId]);
+
+  return { companyData, loading, error };
+};
